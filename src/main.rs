@@ -1,24 +1,39 @@
 extern crate ggez;
 
-use ggez::{conf, event::EventHandler, graphics, Context, GameResult};
+mod gamestates;
 
-struct MainState {}
+use ggez::{conf, event::EventHandler, Context, GameResult};
 
-impl MainState {
-    fn new(_ctx: &mut Context) -> GameResult<Self> {
-        let s = MainState {};
+use gamestates::{GameState, hello::HelloState};
+
+struct StateManager {
+    states: Vec<Box<GameState>>,
+}
+
+impl StateManager {
+    fn new(ctx: &mut Context) -> GameResult<Self> {
+        let s = StateManager {
+            states: vec![Box::new(HelloState::new(ctx)?)]
+        };
         Ok(s)
     }
 }
 
-impl EventHandler for MainState {
-    fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
-        Ok(())
+impl EventHandler for StateManager {
+    fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
+        // only update top state
+        match self.states.last_mut() {
+            Some(state) => state.update(ctx),
+            None => ctx.quit(),
+        }
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
-        graphics::clear(ctx);
-        graphics::present(ctx);
+        // draw all states from bottom up
+        // this should allow to show e.g. a game menu on top of the (paused) game
+        for state in self.states.iter_mut() {
+            state.draw(ctx)?
+        }
         Ok(())
     }
 }
@@ -32,7 +47,7 @@ fn main() -> GameResult<()> {
 
     let ctx = &mut ggez::Context::load_from_conf("rock-project", "Swampsoft Games", c).unwrap();
 
-    let main_state = &mut MainState::new(ctx)?;
+    let main_state = &mut StateManager::new(ctx)?;
 
     ggez::event::run(ctx, main_state)
 }
