@@ -3,6 +3,9 @@ name = "rock-project"
 version = "0.1.0"
 authors = ["Martin Billinger <flkazemakase@gmail.com>"]
 
+[dependencies.ggez]
+version = "0.4"
+features = ["cargo-resource-root"]
+
 [dependencies]
-ggez = "0.4"
 hex2d = "0.2"
